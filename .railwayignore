@@ -1,0 +1,8 @@
+web/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+send_log.json
+credentials/google_token.json

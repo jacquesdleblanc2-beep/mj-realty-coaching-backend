@@ -38,15 +38,16 @@ app = FastAPI(
     description="Backend for the MJ Realty weekly coaching platform",
 )
 
-origins = [
+origins = [o for o in [
     "http://localhost:3000",
     "https://mj-realty-coaching-frontend.vercel.app",
     os.getenv("FRONTEND_URL", ""),
-]
+] if o]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

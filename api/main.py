@@ -9,7 +9,7 @@ import shutil
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routers import pipeline, realtors, auth, progress, coaches
+from api.routers import pipeline, realtors, auth, progress, coaches, admin
 
 # ── Data file bootstrap ────────────────────────────────────────────────────────
 # On Railway (and fresh installs) realtors.json / weekly_progress.json may not
@@ -58,6 +58,7 @@ app.include_router(realtors.router, prefix="/api/realtors", tags=["realtors"])
 app.include_router(progress.router, prefix="/api/progress", tags=["progress"])
 app.include_router(auth.router,     prefix="/api/auth",     tags=["auth"])
 app.include_router(coaches.router,  prefix="/api/coaches",  tags=["coaches"])
+app.include_router(admin.router,    prefix="/api/admin",    tags=["admin"])
 
 
 @app.get("/")

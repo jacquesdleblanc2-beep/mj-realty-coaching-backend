@@ -38,13 +38,15 @@ app = FastAPI(
     description="Backend for the MJ Realty weekly coaching platform",
 )
 
+origins = [
+    "http://localhost:3000",
+    "https://mj-realty-coaching-frontend.vercel.app",
+    os.getenv("FRONTEND_URL", ""),
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",        # Next.js dev server
-        "https://mjrealtycoaching.com", # production domain
-        "https://*.vercel.app",         # Vercel preview deployments
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -1,0 +1,13 @@
+{
+  "coaches": [
+    {
+      "id": "coach_martin",
+      "name": "Martin",
+      "email": "martin@creativrealty.com",
+      "realtor_ids": [
+        "realtor_jacques_leblanc_3129a8",
+        "realtor_pierre_nadeau_62ad37"
+      ]
+    }
+  ]
+}

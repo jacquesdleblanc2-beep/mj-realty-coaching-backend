@@ -79,10 +79,10 @@ def list_coaches():
 @router.get("/by-email/{email}")
 def get_coach_by_email(email: str):
     coaches = _load()
-    coach = next((c for c in coaches if c["email"].lower() == email.lower()), None)
-    if not coach:
-        raise HTTPException(status_code=404, detail="Coach not found.")
-    return coach
+    for coach in coaches:
+        if coach["email"].lower() == email.lower():
+            return coach
+    return None  # 200 with null body — lets frontend check without throwing
 
 
 @router.get("/{coach_id}")

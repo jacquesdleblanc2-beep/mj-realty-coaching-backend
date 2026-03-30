@@ -3,38 +3,17 @@
 # Or:       ./run_api.sh
 
 import os
-import json
-import shutil
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.routers import pipeline, realtors, auth, progress, coaches, admin
 
-# ── Data file bootstrap ────────────────────────────────────────────────────────
-# On Railway (and fresh installs) realtors.json / weekly_progress.json may not
-# exist. Copy from template files so the API starts cleanly.
-
-ROOT = os.path.dirname(os.path.dirname(__file__))
-
-def _bootstrap(filename: str):
-    path     = os.path.join(ROOT, filename)
-    template = os.path.join(ROOT, filename.replace(".json", "_template.json"))
-    if not os.path.exists(path):
-        if os.path.exists(template):
-            shutil.copy(template, path)
-        else:
-            with open(path, "w") as f:
-                json.dump([], f)
-
-_bootstrap("realtors.json")
-_bootstrap("weekly_progress.json")
-
 # ── App ────────────────────────────────────────────────────────────────────────
 
 app = FastAPI(
     title="MJ Realty Coaching API",
-    version="1.0.0",
+    version="2.0.0",
     description="Backend for the MJ Realty weekly coaching platform",
 )
 
@@ -63,7 +42,7 @@ app.include_router(admin.router,    prefix="/api/admin",    tags=["admin"])
 
 @app.get("/")
 def root():
-    return {"status": "MJ Realty Coaching API is running", "version": "1.0.0"}
+    return {"status": "MJ Realty Coaching API is running", "version": "2.0.0"}
 
 
 @app.get("/health")

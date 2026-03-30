@@ -10,14 +10,11 @@ venv/
 .env
 .env.*
 
-# ── Runtime data files — NOT tracked in git ───────────────────────────────────
-# These are live data files that change every week.
-# Back them up separately (e.g. copy to a secure folder or cloud storage).
-# DO NOT commit them — they contain personal realtor info and score history.
-# Use realtors_template.json / weekly_progress_template.json for deployment.
+# ── Runtime data files — superseded by Supabase, never commit ─────────────────
 realtors.json
 weekly_progress.json
 send_log.json
+data/
 scheduler.log
 *.log
 

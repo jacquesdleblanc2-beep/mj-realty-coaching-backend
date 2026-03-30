@@ -4,9 +4,12 @@ import os
 import sys
 import json
 from datetime import datetime
+from config import COACHING_CHECKLIST
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from config import COACHING_CHECKLIST, load_realtors, save_realtors
+ROOT = os.path.dirname(os.path.dirname(__file__))
+sys.path.insert(0, ROOT)
+from api import crud
+
 from agents.sheets_manager import read_sheet_data
 
 LOG_PATH      = os.path.join(os.path.dirname(os.path.dirname(__file__)), "send_log.json")
@@ -45,8 +48,8 @@ def _progress_for(realtor_id: str, week_label: str) -> dict | None:
 def build_monday_report(week_label: str) -> dict:
     """
     Load the Sunday send log, read each realtor's sheet (or fall back to
-    weekly_progress.json if the dashboard was used instead), compile report.
-    Also persists score history back to realtors.json.
+    weekly_progress data if the dashboard was used instead), compile report.
+    Also persists score history back to Supabase.
     """
     log     = _load_log()
     entries = []
@@ -59,8 +62,8 @@ def build_monday_report(week_label: str) -> dict:
     if not this_week:
         print(f"  Warning: no Monday send log found for '{week_label}'")
 
-    # Build a quick lookup: realtor_id by name from realtors.json
-    realtors     = load_realtors()
+    # Build a quick lookup: realtor_id by name from Supabase
+    realtors     = crud.get_all_realtors()
     id_by_name   = {r["name"]: r["id"] for r in realtors}
 
     for entry in this_week:
@@ -71,7 +74,7 @@ def build_monday_report(week_label: str) -> dict:
 
         print(f"  Reading data for {name}…")
 
-        # ── Prefer weekly_progress.json (dashboard) over Google Sheets ──────
+        # ── Prefer weekly_progress (dashboard) over Google Sheets ────────────
         web_progress = _progress_for(rid, week_label) if rid else None
 
         if web_progress and web_progress.get("percentage", 0) > 0:
@@ -121,28 +124,25 @@ def build_monday_report(week_label: str) -> dict:
             "note_to_martin":  data["note_to_martin"],
         })
 
-    # ── Persist score history to realtors.json ────────────────────────────────
+    # ── Persist score history to Supabase ─────────────────────────────────────
     for entry in entries:
         if not entry["uploaded"]:
             continue
         for r in realtors:
             if r["name"] == entry["realtor_name"]:
-                if "score_history" not in r:
-                    r["score_history"] = []
-                r["score_history"] = [
-                    h for h in r["score_history"]
+                history = [
+                    h for h in (r.get("score_history") or [])
                     if h.get("week_label") != week_label
                 ]
-                r["score_history"].append({
+                history.append({
                     "week_label":     week_label,
                     "score":          entry["score"],
                     "total_possible": entry["total_possible"],
                     "percentage":     entry["percentage"],
                     "date":           datetime.now().strftime("%Y-%m-%d"),
                 })
-                r["score_history"] = r["score_history"][-52:]
+                crud.update_realtor(r["id"], {"score_history": history[-52:]})
                 break
-    save_realtors(realtors)
 
     return {
         "week_label":     week_label,

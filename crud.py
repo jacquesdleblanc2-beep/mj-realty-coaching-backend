@@ -1,9 +1,3 @@
-"""
-crud.py — All database operations via Supabase.
-Replaces load_*/save_* JSON file helpers across every router.
-"""
-
-from datetime import datetime, timezone
 from db import supabase
 
 
@@ -34,7 +28,15 @@ def update_coach(coach_id: str, data: dict) -> dict:
 
 
 def delete_coach(coach_id: str) -> None:
+    supabase.table("realtors").update({"coach_id": None}).eq("coach_id", coach_id).execute()
     supabase.table("coaches").delete().eq("id", coach_id).execute()
+
+
+def get_coaches_with_realtors() -> list[dict]:
+    coaches = get_all_coaches()
+    for c in coaches:
+        c["realtors"] = get_realtors_by_coach(c["id"])
+    return coaches
 
 
 # ── Realtors ───────────────────────────────────────────────────────────────────
@@ -48,8 +50,17 @@ def get_realtor_by_id(realtor_id: str) -> dict | None:
     return res.data[0] if res.data else None
 
 
+def get_realtor_by_email(email: str) -> dict | None:
+    res = supabase.table("realtors").select("*").ilike("email", email).execute()
+    return res.data[0] if res.data else None
+
+
 def get_realtors_by_coach(coach_id: str) -> list[dict]:
     return supabase.table("realtors").select("*").eq("coach_id", coach_id).execute().data
+
+
+def assign_realtor_to_coach(realtor_id: str, coach_id: str) -> dict:
+    return supabase.table("realtors").update({"coach_id": coach_id}).eq("id", realtor_id).execute().data[0]
 
 
 def create_realtor(
@@ -106,7 +117,10 @@ def get_all_progress(realtor_id: str) -> list[dict]:
 def upsert_progress(realtor_id: str, week_label: str, data: dict) -> dict:
     return (
         supabase.table("weekly_progress")
-        .upsert({"realtor_id": realtor_id, "week_label": week_label, **data})
+        .upsert(
+            {"realtor_id": realtor_id, "week_label": week_label, **data},
+            on_conflict="realtor_id,week_label",
+        )
         .execute()
         .data[0]
     )

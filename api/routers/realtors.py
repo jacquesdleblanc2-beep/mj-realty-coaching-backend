@@ -53,6 +53,11 @@ def get_realtors():
     return crud.get_all_realtors()
 
 
+@router.get("/by-email/{email}")
+def get_realtor_by_email_route(email: str):
+    return crud.get_realtor_by_email(email)
+
+
 @router.get("/{realtor_id}/history")
 def get_realtor_history(realtor_id: str):
     realtor = crud.get_realtor_by_id(realtor_id)

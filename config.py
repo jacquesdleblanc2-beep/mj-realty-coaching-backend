@@ -38,9 +38,6 @@ def save_realtors(realtors: list):
         _json.dump(realtors, f, indent=2)
 
 
-# Convenience alias — always reads from file so changes take effect immediately
-REALTORS = load_realtors()
-
 # ── Weekly Coaching Checklist ──────────────────────────────────────────────────
 # Each item has a category, task description, and point value (total = 100).
 COACHING_CHECKLIST = [

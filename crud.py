@@ -142,6 +142,17 @@ def append_log(
     }).execute()
 
 
+def get_log_by_week_event(week_label: str, event: str) -> list[dict]:
+    return (
+        supabase.table("send_log")
+        .select("*")
+        .eq("week_label", week_label)
+        .eq("event", event)
+        .execute()
+        .data
+    )
+
+
 def get_recent_log(limit: int = 20) -> list[dict]:
     return (
         supabase.table("send_log")

@@ -2,7 +2,7 @@
 #
 # WEEKLY FLOW:
 #   Monday 7:00 AM  — run_monday_pipeline()
-#     1. Read last week's sheets → collect scores → save to realtors.json
+#     1. Read last week's sheets → collect scores → save to Supabase
 #     2. Build Martin's coaching report from those scores
 #     3. Email Martin the report
 #     4. Create new week's Google Sheets for each realtor
@@ -10,36 +10,18 @@
 #     6. Log all sheet creation as event="monday_send"
 #
 #   Sunday 8:00 AM  — run_sunday_reminder()
-#     1. Find each realtor's current-week sheet URL from send_log.json
+#     1. Find each realtor's current-week sheet from send_log (Supabase)
 #     2. Send reminder emails — "your sheet is due tonight"
 #     3. Log as event="sunday_reminder"
 #     No score collection. No sheet creation. Reminders only.
 
-import os
-import json
 from datetime import datetime, timedelta
 
-from config import load_realtors, MARTIN_EMAIL
+import crud
+from config import MARTIN_EMAIL
 from agents.sheets_manager import create_weekly_sheet
 from agents.email_sender   import send_monday_emails, send_monday_report, send_sunday_reminder
 from agents.reporter       import build_monday_report
-
-LOG_PATH = os.path.join(os.path.dirname(__file__), "send_log.json")
-
-
-def _load_log() -> list:
-    if os.path.exists(LOG_PATH):
-        try:
-            with open(LOG_PATH) as f:
-                return json.load(f)
-        except Exception:
-            pass
-    return []
-
-
-def _save_log(log: list):
-    with open(LOG_PATH, "w") as f:
-        json.dump(log, f, indent=2)
 
 
 def _week_label() -> str:
@@ -63,7 +45,7 @@ def _prev_week_label() -> str:
 def run_sunday_reminder(dry_run=False, progress_cb=None) -> dict:
     """
     Sunday 8:00 AM job.
-    Finds each realtor's current-week sheet from send_log.json and sends
+    Finds each realtor's current-week sheet from Supabase send_log and sends
     a reminder email to complete their checklist before midnight.
     No score collection. No sheet creation.
     """
@@ -76,25 +58,21 @@ def run_sunday_reminder(dry_run=False, progress_cb=None) -> dict:
 
     _cb(f"📨 Sunday reminders for: {week_label}")
 
-    log       = _load_log()
-    this_week = [
-        e for e in log
-        if e.get("week_label") == week_label and e.get("event") == "monday_send"
-    ]
+    log_entries = crud.get_log_by_week_event(week_label, "monday_send")
 
-    if not this_week:
+    if not log_entries:
         _cb("  ⚠️  No sheets found for this week — run the Monday pipeline first.")
         return results
 
     sheet_entries = [
         {
-            "realtor_name":  e["realtor_name"],
-            "realtor_email": e["realtor_email"],
-            "sheet_url":     e.get("sheet_url", ""),
+            "realtor_name":  e["details"]["realtor_name"],
+            "realtor_email": e["details"]["realtor_email"],
+            "sheet_url":     e["details"].get("sheet_url", ""),
             "week_label":    week_label,
         }
-        for e in this_week
-        if e.get("realtor_email") and e.get("sheet_url")
+        for e in log_entries
+        if e.get("details", {}).get("realtor_email") and e.get("details", {}).get("sheet_url")
     ]
 
     _cb(f"  {len(sheet_entries)} realtors to remind…")
@@ -109,14 +87,9 @@ def run_sunday_reminder(dry_run=False, progress_cb=None) -> dict:
         results["errors"]["reminder_emails"] = str(e)
         _cb(f"  ❌ Reminder email error: {e}")
 
-    log.append({
-        "event":      "sunday_reminder",
-        "timestamp":  datetime.now().isoformat(),
-        "week_label": week_label,
-        "reminded":   [e.get("realtor_name", "") for e in results["reminded"]],
-        "dry_run":    dry_run,
+    crud.append_log("sunday_reminder", week_label=week_label, dry_run=dry_run, details={
+        "reminded": [e.get("realtor_name", "") for e in results["reminded"]],
     })
-    _save_log(log)
 
     return results
 
@@ -126,7 +99,7 @@ def run_sunday_reminder(dry_run=False, progress_cb=None) -> dict:
 def run_monday_pipeline(dry_run=True, progress_cb=None) -> dict:
     """
     Monday 7:00 AM job — exact order:
-    1. Read last week's sheets → collect scores → save to realtors.json
+    1. Read last week's sheets → collect scores → save to Supabase
     2. Build Martin's report from those scores
     3. Email Martin the report
     4. Create new week's Google Sheets for each realtor
@@ -141,7 +114,7 @@ def run_monday_pipeline(dry_run=True, progress_cb=None) -> dict:
     prev_week_label = _prev_week_label()
     results         = {"week_label": week_label, "sheets": [], "emails": [], "errors": {}}
 
-    realtors = load_realtors()
+    realtors = crud.get_all_realtors()
     _cb(f"📋 Monday pipeline — new week: {week_label}")
     _cb(f"👥 {len(realtors)} realtors\n")
 
@@ -190,29 +163,19 @@ def run_monday_pipeline(dry_run=True, progress_cb=None) -> dict:
         _cb(f"  ❌ Realtor email error: {e}")
 
     # ── Step 7: Log ───────────────────────────────────────────────────────────
-    log = _load_log()
     for sr in sheet_results:
-        log.append({
-            "event":           "monday_send",
-            "timestamp":       datetime.now().isoformat(),
-            "week_label":      week_label,
-            "realtor_name":    sr["realtor"]["name"],
-            "realtor_email":   sr["realtor"]["email"],
-            "spreadsheet_id":  sr["sheet_info"]["spreadsheet_id"],
-            "sheet_url":       sr["sheet_info"]["url"],
-            "dry_run":         dry_run,
+        crud.append_log("monday_send", week_label=week_label, dry_run=dry_run, details={
+            "realtor_name":   sr["realtor"]["name"],
+            "realtor_email":  sr["realtor"]["email"],
+            "spreadsheet_id": sr["sheet_info"]["spreadsheet_id"],
+            "sheet_url":      sr["sheet_info"]["url"],
         })
-    log.append({
-        "event":      "monday_report",
-        "timestamp":  datetime.now().isoformat(),
-        "week_label": prev_week_label,
-        "to":         MARTIN_EMAIL,
-        "submitted":  report["submitted"],
-        "total":      report["total_realtors"],
-        "dry_run":    dry_run,
-        "status":     results.get("martin_email", {}).get("status"),
+    crud.append_log("monday_report", week_label=prev_week_label, dry_run=dry_run, details={
+        "to":        MARTIN_EMAIL,
+        "submitted": report["submitted"],
+        "total":     report["total_realtors"],
+        "status":    results.get("martin_email", {}).get("status"),
     })
-    _save_log(log)
 
     _cb(f"\n✅ Monday pipeline complete.")
     _cb(f"   Sheets:  {len(results['sheets'])}")

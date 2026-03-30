@@ -96,6 +96,16 @@ def add_realtor(data: NewRealtor):
     return new_realtor
 
 
+@router.get("/{realtor_id}")
+def get_realtor(realtor_id: str):
+    from config import load_realtors
+    realtors = load_realtors()
+    for r in realtors:
+        if r["id"] == realtor_id:
+            return r
+    raise HTTPException(status_code=404, detail="Realtor not found.")
+
+
 @router.put("/{realtor_id}")
 def update_realtor(realtor_id: str, data: UpdateRealtor):
     """Update name, email, focus, goals, priorities, or yearly targets."""

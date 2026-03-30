@@ -36,6 +36,7 @@ class UpdateRealtor(BaseModel):
     martin_goals:       Optional[str]  = None
     priorities:         Optional[str]  = None
     yearly_goals:       Optional[dict] = None
+    tasks:              Optional[list] = None
     current_gci:        Optional[int]  = None
     current_deals:      Optional[int]  = None
     current_buyers:     Optional[int]  = None
@@ -109,6 +110,7 @@ def update_realtor(realtor_id: str, data: UpdateRealtor):
             if data.martin_goals       is not None: r["martin_goals"]       = data.martin_goals.strip()
             if data.priorities         is not None: r["priorities"]         = data.priorities.strip()
             if data.yearly_goals       is not None: r["yearly_goals"]       = data.yearly_goals
+            if data.tasks              is not None: r["tasks"]              = data.tasks
             if data.current_gci        is not None: r["current_gci"]        = data.current_gci
             if data.current_deals      is not None: r["current_deals"]      = data.current_deals
             if data.current_buyers     is not None: r["current_buyers"]     = data.current_buyers

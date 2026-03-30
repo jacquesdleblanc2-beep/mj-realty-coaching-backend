@@ -20,7 +20,7 @@ sys.path.insert(0, ROOT)
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-import crud
+from .. import crud
 
 router = APIRouter()
 

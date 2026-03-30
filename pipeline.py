@@ -17,7 +17,7 @@
 
 from datetime import datetime, timedelta
 
-import crud
+from api import crud
 from config import MARTIN_EMAIL
 from agents.sheets_manager import create_weekly_sheet
 from agents.email_sender   import send_monday_emails, send_monday_report, send_sunday_reminder

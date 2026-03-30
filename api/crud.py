@@ -1,4 +1,4 @@
-from db import supabase
+from .db import supabase
 
 
 # ── Coaches ────────────────────────────────────────────────────────────────────

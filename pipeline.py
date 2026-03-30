@@ -15,10 +15,12 @@
 #     3. Log as event="sunday_reminder"
 #     No score collection. No sheet creation. Reminders only.
 
+import os
 from datetime import datetime, timedelta
 
 from api import crud
-from config import MARTIN_EMAIL
+
+MARTIN_EMAIL = os.getenv("MARTIN_EMAIL", "martin@creativrealty.com")
 from agents.sheets_manager import create_weekly_sheet
 from agents.email_sender   import send_monday_emails, send_monday_report, send_sunday_reminder
 from agents.reporter       import build_monday_report

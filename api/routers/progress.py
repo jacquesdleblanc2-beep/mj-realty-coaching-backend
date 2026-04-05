@@ -184,8 +184,6 @@ def patch_task(realtor_id: str, week_label: str, body: TaskPatch):
     elif body.action == "set_count":
         if input_type != "count":
             raise HTTPException(status_code=400, detail="Task is not a count task.")
-        if t.get("done", False):
-            raise HTTPException(status_code=400, detail="Task already completed — count is locked.")
         if body.day not in DAYS:
             raise HTTPException(status_code=400, detail=f"Invalid day: {body.day!r}")
         if body.value is None or body.value < 0:

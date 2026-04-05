@@ -79,7 +79,6 @@ def create_realtor(
         "yearly_goals":   {},
         "tasks":          [],
         "score_history":  [],
-        "weekly_hours":   None,
     }).execute().data[0]
 
 

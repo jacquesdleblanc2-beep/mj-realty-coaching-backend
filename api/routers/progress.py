@@ -96,11 +96,13 @@ def _default_tasks(realtor_id: str) -> list:
     for t in (realtor.get("tasks") or []):
         if not t.get("enabled", True):
             continue
+        raw_type   = t.get("input_type") or t.get("type") or "yes_no"
+        input_type = "count" if raw_type == "count" else "yes_no"
         entry = {
             "category":      t.get("category", ""),
             "task":          t["task"],
             "points":        t["points"],
-            "input_type":    t.get("input_type", "yes_no"),
+            "input_type":    input_type,
             "enabled":       True,
             "done":          False,
             "earned_points": 0.0,
@@ -252,3 +254,28 @@ def update_daily_focus(realtor_id: str, week_label: str, body: DailyFocus):
         "last_updated": datetime.now().isoformat(),
     })
     return {"status": "ok", "date": body.date, "items": body.items}
+
+
+@router.post("/{realtor_id}/{week_label}/sync-tasks")
+def sync_tasks(realtor_id: str, week_label: str):
+    entry = crud.get_progress(realtor_id, week_label)
+    if entry is None:
+        entry = _make_entry(realtor_id, week_label)
+        return crud.upsert_progress(realtor_id, week_label, entry)
+    realtor = crud.get_realtor_by_id(realtor_id)
+    if not realtor:
+        raise HTTPException(status_code=404, detail="Realtor not found")
+    tasks = list(entry.get("tasks", []))
+    for t in tasks:
+        raw            = t.get("input_type") or t.get("type") or "yes_no"
+        correct_type   = "count" if raw == "count" else "yes_no"
+        t["input_type"] = correct_type
+        if correct_type == "count":
+            if "daily_counts" not in t:
+                t["daily_counts"] = {d: 0 for d in DAYS}
+            if "weekly_total" not in t:
+                t["weekly_total"] = 0
+            if "target" not in t:
+                t["target"] = 1
+    score, possible, pct = _calc_score(tasks)
+    return crud.upsert_progress(realtor_id, week_label, {**entry, "tasks": tasks, "score": score, "total_possible": possible, "percentage": pct})

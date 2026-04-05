@@ -45,6 +45,13 @@ class UpdateRealtor(BaseModel):
     current_sellers:    Optional[int]   = None
     last_goals_updated: Optional[str]   = None
     weekly_hours:       Optional[int]   = None
+    experience_level:   Optional[str]   = None
+    roadmap_completed:  Optional[list]  = None
+
+
+class RoadmapPatch(BaseModel):
+    item:      str
+    completed: bool
 
 
 # ── Endpoints ──────────────────────────────────────────────────────────────────
@@ -117,9 +124,25 @@ def update_realtor(realtor_id: str, data: UpdateRealtor):
     if data.current_sellers    is not None: patch["current_sellers"]    = data.current_sellers
     if data.last_goals_updated is not None: patch["last_goals_updated"] = data.last_goals_updated
     if data.weekly_hours       is not None: patch["weekly_hours"]       = data.weekly_hours
+    if data.experience_level   is not None: patch["experience_level"]   = data.experience_level
+    if data.roadmap_completed  is not None: patch["roadmap_completed"]  = data.roadmap_completed
     if not patch:
         return realtor
     return crud.update_realtor(realtor_id, patch)
+
+
+@router.patch("/{realtor_id}/roadmap")
+def patch_roadmap(realtor_id: str, data: RoadmapPatch):
+    realtor = crud.get_realtor_by_id(realtor_id)
+    if not realtor:
+        raise HTTPException(status_code=404, detail="Realtor not found.")
+    completed: list = list(realtor.get("roadmap_completed") or [])
+    if data.completed and data.item not in completed:
+        completed.append(data.item)
+    elif not data.completed and data.item in completed:
+        completed.remove(data.item)
+    crud.update_realtor(realtor_id, {"roadmap_completed": completed})
+    return {"roadmap_completed": completed}
 
 
 @router.delete("/{realtor_id}")

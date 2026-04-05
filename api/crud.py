@@ -71,14 +71,16 @@ def create_realtor(
     coaching_focus: str = "General coaching",
 ) -> dict:
     return supabase.table("realtors").insert({
-        "id":             realtor_id,
-        "name":           name,
-        "email":          email,
-        "coach_id":       coach_id,
-        "coaching_focus": coaching_focus,
-        "yearly_goals":   {},
-        "tasks":          [],
-        "score_history":  [],
+        "id":                realtor_id,
+        "name":              name,
+        "email":             email,
+        "coach_id":          coach_id,
+        "coaching_focus":    coaching_focus,
+        "yearly_goals":      {},
+        "tasks":             [],
+        "score_history":     [],
+        "experience_level":  None,
+        "roadmap_completed": [],
     }).execute().data[0]
 
 

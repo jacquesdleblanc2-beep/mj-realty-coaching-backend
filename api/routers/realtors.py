@@ -44,6 +44,7 @@ class UpdateRealtor(BaseModel):
     current_buyers:     Optional[int]   = None
     current_sellers:    Optional[int]   = None
     last_goals_updated: Optional[str]   = None
+    weekly_hours:       Optional[int]   = None
 
 
 # ── Endpoints ──────────────────────────────────────────────────────────────────
@@ -115,6 +116,7 @@ def update_realtor(realtor_id: str, data: UpdateRealtor):
     if data.current_buyers     is not None: patch["current_buyers"]     = data.current_buyers
     if data.current_sellers    is not None: patch["current_sellers"]    = data.current_sellers
     if data.last_goals_updated is not None: patch["last_goals_updated"] = data.last_goals_updated
+    if data.weekly_hours       is not None: patch["weekly_hours"]       = data.weekly_hours
     if not patch:
         return realtor
     return crud.update_realtor(realtor_id, patch)

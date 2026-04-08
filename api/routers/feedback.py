@@ -23,7 +23,7 @@ def send_email_background(name: str, page: str, message: str):
         return
     try:
         payload = json.dumps({
-            "from": "onboarding@resend.dev",
+            "from": "MJ Realty Platform <noreply@creativrealty.com>",
             "to": [RECIPIENT],
             "subject": f"MJ Realty Feedback — {page}",
             "text": f"From: {name}\nPage: {page}\n\nMessage:\n{message}"

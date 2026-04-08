@@ -220,3 +220,27 @@ def patch_read_notice(user_id: str, user_type: str, notice_id: str, read: bool) 
         current = [nid for nid in current if nid != notice_id]
     supabase.table(table).update({"read_notices": current}).eq("id", user_id).execute()
     return current
+
+
+# ── Feedback ───────────────────────────────────────────────────────────────────
+
+def save_feedback(name: str, page: str, message: str) -> dict:
+    return supabase.table("feedback").insert({
+        "name":    name,
+        "page":    page,
+        "message": message,
+    }).execute().data[0]
+
+
+def get_all_feedback() -> list[dict]:
+    return (
+        supabase.table("feedback")
+        .select("*")
+        .order("created_at", desc=True)
+        .execute()
+        .data
+    )
+
+
+def delete_feedback(feedback_id: str) -> None:
+    supabase.table("feedback").delete().eq("id", feedback_id).execute()

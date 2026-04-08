@@ -1,66 +1,46 @@
-# api/routers/feedback.py — Feedback email endpoint
-#
-# POST /api/feedback
-#   Body: { name: str, page: str, message: str }
-#   Sends feedback email to jacques@creativrealty.com
-#
-# Required Railway environment variables:
-#   SMTP_HOST  — e.g. smtp.gmail.com
-#   SMTP_PORT  — e.g. 587
-#   SMTP_USER  — sending email address
-#   SMTP_PASS  — SMTP password or app password
-
 import os
-import smtplib
 import logging
 import threading
-from email.mime.text import MIMEText
-
+import urllib.request
+import json
 from fastapi import APIRouter
 from pydantic import BaseModel
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
-
 RECIPIENT = "jacques@creativrealty.com"
 
-
 class FeedbackBody(BaseModel):
-    name:    str
-    page:    str
+    name: str
+    page: str
     message: str
 
-
 def send_email_background(name: str, page: str, message: str):
-    host = os.getenv("SMTP_HOST", "")
-    port = int(os.getenv("SMTP_PORT", "587"))
-    user = os.getenv("SMTP_USER", "")
-    pw   = os.getenv("SMTP_PASS", "")
-
-    subject = f"MJ Realty Platform Feedback — {page}"
-    text    = f"From: {name}\nPage: {page}\n\nMessage:\n{message}"
-
-    if not (host and user and pw):
-        logger.info("[feedback] SMTP not configured — printing to logs instead")
-        logger.info("[feedback] Subject: %s", subject)
-        logger.info("[feedback] Body: %s", text)
+    api_key = os.getenv("RESEND_API_KEY", "")
+    if not api_key:
+        logger.info("[feedback] RESEND_API_KEY not set — logging only")
+        logger.info("[feedback] From: %s | Page: %s | Message: %s", name, page, message)
         return
-
     try:
-        msg = MIMEText(text)
-        msg["Subject"] = subject
-        msg["From"]    = user
-        msg["To"]      = RECIPIENT
-
-        with smtplib.SMTP(host, port) as smtp:
-            smtp.starttls()
-            smtp.login(user, pw)
-            smtp.sendmail(user, [RECIPIENT], msg.as_string())
-
-        logger.info("[feedback] Email sent from %s (page: %s)", name, page)
+        payload = json.dumps({
+            "from": "MJ Realty Platform <onboarding@resend.dev>",
+            "to": [RECIPIENT],
+            "subject": f"MJ Realty Feedback — {page}",
+            "text": f"From: {name}\nPage: {page}\n\nMessage:\n{message}"
+        }).encode()
+        req = urllib.request.Request(
+            "https://api.resend.com/emails",
+            data=payload,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            },
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            logger.info("[feedback] Email sent via Resend, status: %s", resp.status)
     except Exception as exc:
-        logger.error("[feedback] Failed to send email: %s", exc)
-
+        logger.error("[feedback] Resend failed: %s", exc)
 
 @router.post("")
 def submit_feedback(body: FeedbackBody):

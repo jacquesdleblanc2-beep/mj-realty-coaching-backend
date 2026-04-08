@@ -164,3 +164,59 @@ def get_recent_log(limit: int = 20) -> list[dict]:
         .execute()
         .data
     )
+
+
+# ── Notices ────────────────────────────────────────────────────────────────────
+
+def get_all_notices(audience: str | None = None) -> list[dict]:
+    q = supabase.table("notices").select("*").eq("active", True)
+    if audience:
+        # Return notices for "all" + the specific audience
+        q = q.in_("audience", ["all", audience])
+    return q.order("created_at", desc=True).execute().data
+
+
+def get_all_notices_admin() -> list[dict]:
+    """All notices including inactive — for admin management page."""
+    return (
+        supabase.table("notices")
+        .select("*")
+        .order("created_at", desc=True)
+        .execute()
+        .data
+    )
+
+
+def create_notice(title: str, body: str, audience: str) -> dict:
+    return supabase.table("notices").insert({
+        "title":    title,
+        "body":     body,
+        "audience": audience,
+    }).execute().data[0]
+
+
+def update_notice(notice_id: str, data: dict) -> dict:
+    return supabase.table("notices").update(data).eq("id", notice_id).execute().data[0]
+
+
+def delete_notice(notice_id: str) -> None:
+    """Soft delete — sets active=false."""
+    supabase.table("notices").update({"active": False}).eq("id", notice_id).execute()
+
+
+def get_read_notices(user_id: str, user_type: str) -> list[str]:
+    table = "realtors" if user_type == "realtor" else "coaches"
+    res   = supabase.table(table).select("read_notices").eq("id", user_id).execute()
+    return res.data[0].get("read_notices") or [] if res.data else []
+
+
+def patch_read_notice(user_id: str, user_type: str, notice_id: str, read: bool) -> list[str]:
+    table   = "realtors" if user_type == "realtor" else "coaches"
+    current = get_read_notices(user_id, user_type)
+    if read:
+        if notice_id not in current:
+            current.append(notice_id)
+    else:
+        current = [nid for nid in current if nid != notice_id]
+    supabase.table(table).update({"read_notices": current}).eq("id", user_id).execute()
+    return current

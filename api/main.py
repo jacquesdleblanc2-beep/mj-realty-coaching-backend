@@ -7,7 +7,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routers import pipeline, realtors, auth, progress, coaches, admin, feedback
+from api.routers import pipeline, realtors, auth, progress, coaches, admin, feedback, notices
 
 # ── App ────────────────────────────────────────────────────────────────────────
 
@@ -39,6 +39,7 @@ app.include_router(auth.router,     prefix="/api/auth",     tags=["auth"])
 app.include_router(coaches.router,  prefix="/api/coaches",  tags=["coaches"])
 app.include_router(admin.router,    prefix="/api/admin",    tags=["admin"])
 app.include_router(feedback.router, prefix="/api/feedback", tags=["feedback"])
+app.include_router(notices.router,  prefix="/api/notices",  tags=["notices"])
 
 
 @app.get("/")

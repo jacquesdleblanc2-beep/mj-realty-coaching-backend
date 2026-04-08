@@ -13,6 +13,7 @@
 import os
 import smtplib
 import logging
+import threading
 from email.mime.text import MIMEText
 
 from fastapi import APIRouter
@@ -30,21 +31,20 @@ class FeedbackBody(BaseModel):
     message: str
 
 
-@router.post("")
-def send_feedback(body: FeedbackBody):
+def send_email_background(name: str, page: str, message: str):
     host = os.getenv("SMTP_HOST", "")
     port = int(os.getenv("SMTP_PORT", "587"))
     user = os.getenv("SMTP_USER", "")
     pw   = os.getenv("SMTP_PASS", "")
 
-    subject = f"MJ Realty Platform Feedback — {body.page}"
-    text    = f"From: {body.name}\nPage: {body.page}\n\nMessage:\n{body.message}"
+    subject = f"MJ Realty Platform Feedback — {page}"
+    text    = f"From: {name}\nPage: {page}\n\nMessage:\n{message}"
 
     if not (host and user and pw):
         logger.info("[feedback] SMTP not configured — printing to logs instead")
         logger.info("[feedback] Subject: %s", subject)
         logger.info("[feedback] Body: %s", text)
-        return {"status": "ok"}
+        return
 
     try:
         msg = MIMEText(text)
@@ -57,8 +57,14 @@ def send_feedback(body: FeedbackBody):
             smtp.login(user, pw)
             smtp.sendmail(user, [RECIPIENT], msg.as_string())
 
-        logger.info("[feedback] Email sent from %s (page: %s)", body.name, body.page)
+        logger.info("[feedback] Email sent from %s (page: %s)", name, page)
     except Exception as exc:
         logger.error("[feedback] Failed to send email: %s", exc)
 
+
+@router.post("")
+def submit_feedback(body: FeedbackBody):
+    t = threading.Thread(target=send_email_background, args=(body.name, body.page, body.message))
+    t.daemon = True
+    t.start()
     return {"status": "ok"}

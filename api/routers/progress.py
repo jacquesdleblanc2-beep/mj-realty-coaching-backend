@@ -55,7 +55,8 @@ class FullProgress(BaseModel):
 def _earned(t: dict) -> float:
     if not t.get("enabled", True):
         return 0.0
-    if t.get("input_type", "yes_no") == "count":
+    raw = t.get("input_type") or t.get("type") or "yes_no"
+    if raw == "count":
         target = t.get("target", 1)
         total  = t.get("weekly_total", 0)
         return round(min(total / target, 1.0) * t["points"], 1) if target else 0.0

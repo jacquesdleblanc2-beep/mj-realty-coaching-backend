@@ -132,7 +132,7 @@ def send_welcome_email(name: str, email: str):
 
             <p style="margin:0;color:#374151;font-size:13px;line-height:1.6;">
               Welcome to the team — let's build something great.<br><br>
-              <strong style="color:#0D5C63;">Martin LeBlanc</strong><br>
+              <strong style="color:#0D5C63;">Martin Gallant</strong><br>
               <span style="color:#6b7280;">MJ Realty Coaching</span>
             </p>
           </td>

@@ -40,9 +40,10 @@ class CoachPatch(BaseModel):
     active: Optional[bool] = None
 
 class RealtorCreate(BaseModel):
-    name:     str
-    email:    str
-    coach_id: Optional[str] = None
+    name:                str
+    email:               str
+    coach_id:            Optional[str]  = None
+    email_notifications: Optional[bool] = True
 
 class RealtorPatch(BaseModel):
     name:   Optional[str]  = None
@@ -134,6 +135,7 @@ def create_realtor(data: RealtorCreate):
         data.name.strip(),
         data.email.strip().lower(),
         coach_id=data.coach_id or None,
+        email_notifications=data.email_notifications if data.email_notifications is not None else True,
     )
     coach = crud.get_coach_by_id(data.coach_id) if data.coach_id else None
     return {

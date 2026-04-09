@@ -16,14 +16,16 @@
 #     No score collection. No sheet creation. Reminders only.
 
 import os
+import threading
 from datetime import datetime, timedelta
 
 from api import crud
 
 MARTIN_EMAIL = os.getenv("MARTIN_EMAIL", "martin@creativrealty.com")
 from agents.sheets_manager import create_weekly_sheet
-from agents.email_sender   import send_monday_emails, send_monday_report, send_sunday_reminder
+from agents.email_sender   import send_monday_report
 from agents.reporter       import build_monday_report
+from api.routers.feedback  import send_sunday_reminder_email, send_monday_new_week_email
 
 
 def _week_label() -> str:
@@ -77,17 +79,34 @@ def run_sunday_reminder(dry_run=False, progress_cb=None) -> dict:
         if e.get("details", {}).get("realtor_email") and e.get("details", {}).get("sheet_url")
     ]
 
-    _cb(f"  {len(sheet_entries)} realtors to remind…")
+    notif_realtors = crud.get_realtors_with_notifications()
+    notif_emails   = {r["email"].lower() for r in notif_realtors}
+    notif_by_email = {r["email"].lower(): r for r in notif_realtors}
 
-    try:
-        email_log = send_sunday_reminder(sheet_entries, dry_run=dry_run)
-        for r in email_log:
-            results["reminded"].append(r)
-            name = r.get("realtor_name", r.get("to", ""))
-            _cb(f"    {'[DRY RUN]' if dry_run else '✅'} Reminded {name}")
-    except Exception as e:
-        results["errors"]["reminder_emails"] = str(e)
-        _cb(f"  ❌ Reminder email error: {e}")
+    to_remind = [e for e in sheet_entries if e["realtor_email"].lower() in notif_emails]
+    _cb(f"  {len(to_remind)} realtors to remind ({len(sheet_entries) - len(to_remind)} have notifications off)…")
+
+    for entry in to_remind:
+        name  = entry["realtor_name"]
+        email = entry["realtor_email"]
+        realtor = notif_by_email.get(email.lower(), {})
+        coach_name = "Your Coach"
+        try:
+            if realtor.get("coach_id"):
+                coach = crud.get_coach_by_id(realtor["coach_id"])
+                if coach and coach.get("name"):
+                    coach_name = coach["name"]
+        except Exception:
+            pass
+        if not dry_run:
+            t = threading.Thread(
+                target=send_sunday_reminder_email,
+                args=(name, email, coach_name),
+                daemon=True,
+            )
+            t.start()
+        results["reminded"].append({"realtor_name": name, "to": email})
+        _cb(f"    {'[DRY RUN]' if dry_run else '✅'} Reminded {name}")
 
     crud.append_log("sunday_reminder", week_label=week_label, dry_run=dry_run, details={
         "reminded": [e.get("realtor_name", "") for e in results["reminded"]],
@@ -155,14 +174,37 @@ def run_monday_pipeline(dry_run=True, progress_cb=None) -> dict:
             results["errors"][realtor["name"]] = str(e)
             _cb(f"    ❌ {realtor['name']}: {e}")
 
-    # ── Step 6: Email realtors ────────────────────────────────────────────────
+    # ── Step 6: Email realtors (notifications-enabled only) ──────────────────
     _cb(f"\n📧 Step 4 — Emailing realtors ({'dry run' if dry_run else 'live'})…")
-    try:
-        email_log = send_monday_emails(sheet_results, report, dry_run=dry_run)
-        results["emails"] = email_log
-    except Exception as e:
-        results["errors"]["realtor_emails"] = str(e)
-        _cb(f"  ❌ Realtor email error: {e}")
+    notif_realtors_monday = crud.get_realtors_with_notifications()
+    notif_ids_monday      = {r["id"] for r in notif_realtors_monday}
+    notif_map_monday      = {r["id"]: r for r in notif_realtors_monday}
+    email_log = []
+    for sr in sheet_results:
+        realtor = sr["realtor"]
+        if realtor["id"] not in notif_ids_monday:
+            _cb(f"  ⏭ Skipped {realtor['name']} (notifications off)")
+            continue
+        coach_name = "Your Coach"
+        try:
+            r_data = notif_map_monday[realtor["id"]]
+            if r_data.get("coach_id"):
+                coach = crud.get_coach_by_id(r_data["coach_id"])
+                if coach and coach.get("name"):
+                    coach_name = coach["name"]
+        except Exception:
+            pass
+        if not dry_run:
+            t = threading.Thread(
+                target=send_monday_new_week_email,
+                args=(realtor["name"], realtor["email"], coach_name),
+                daemon=True,
+            )
+            t.start()
+        entry = {"realtor_name": realtor["name"], "to": realtor["email"]}
+        email_log.append(entry)
+        _cb(f"  {'[DRY RUN]' if dry_run else '✅'} Emailed {realtor['name']}")
+    results["emails"] = email_log
 
     # ── Step 7: Log ───────────────────────────────────────────────────────────
     for sr in sheet_results:

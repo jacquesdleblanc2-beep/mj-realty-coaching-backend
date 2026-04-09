@@ -56,6 +56,10 @@ class RoadmapPatch(BaseModel):
     completed: bool
 
 
+class NotificationsPatch(BaseModel):
+    enabled: bool
+
+
 # ── Endpoints ──────────────────────────────────────────────────────────────────
 
 @router.get("")
@@ -166,6 +170,13 @@ def patch_roadmap(realtor_id: str, data: RoadmapPatch):
         completed.remove(data.item)
     crud.update_realtor(realtor_id, {"roadmap_completed": completed})
     return {"roadmap_completed": completed}
+
+
+@router.patch("/{realtor_id}/notifications")
+def patch_notifications(realtor_id: str, data: NotificationsPatch):
+    if not crud.get_realtor_by_id(realtor_id):
+        raise HTTPException(status_code=404, detail="Realtor not found.")
+    return crud.update_realtor_notifications(realtor_id, data.enabled)
 
 
 @router.delete("/{realtor_id}")

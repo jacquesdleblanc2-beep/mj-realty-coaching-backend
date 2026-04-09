@@ -254,6 +254,157 @@ def send_coach_welcome_email(name: str, email: str):
     }, "coach-welcome")
 
 
+def send_sunday_reminder_email(name: str, email: str, coach_name: str = "Your Coach"):
+    html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f0fafa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fafa;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #b2d8db;">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:#0D5C63;padding:28px 40px;">
+            <p style="margin:0;color:#ffffff;font-size:18px;font-weight:700;letter-spacing:-0.3px;">MJ Realty Coaching</p>
+            <p style="margin:4px 0 0;color:#a7d8dc;font-size:13px;">Weekly Check-In</p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:36px 40px;">
+            <p style="margin:0 0 16px;color:#1a1a1a;font-size:15px;">Hi {name},</p>
+            <p style="margin:0 0 16px;color:#374151;font-size:14px;line-height:1.6;">
+              Your weekly checklist closes tonight at midnight. Take 5 minutes to make sure it reflects
+              your actual week — every call, every follow-up, every connection counts toward your score.
+            </p>
+            <p style="margin:0 0 24px;color:#374151;font-size:14px;line-height:1.6;">
+              Don&apos;t leave points on the table. Log in and finish strong.
+            </p>
+
+            <!-- CTA button -->
+            <table cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
+              <tr>
+                <td style="background:#FF6B35;border-radius:8px;">
+                  <a href="{PLATFORM_URL}"
+                     style="display:inline-block;padding:12px 28px;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;">
+                    Update My Checklist →
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0;color:#374151;font-size:13px;line-height:1.6;">
+              <strong style="color:#0D5C63;">{coach_name}</strong>
+              <span style="color:#6b7280;"> &bull; MJ Realty Coaching</span>
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f0fafa;padding:20px 40px;border-top:1px solid #e5f0f1;">
+            <p style="margin:0;color:#9ca3af;font-size:11px;text-align:center;">
+              MJ Realty Coaching &bull; Weekly Sunday reminder.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+
+    _resend({
+        "from":    "MJ Realty Coaching <noreply@creativrealty.com>",
+        "to":      [email],
+        "subject": f"How did your week go, {name}?",
+        "html":    html,
+    }, "sunday-reminder")
+
+
+def send_monday_new_week_email(name: str, email: str, coach_name: str = "Your Coach"):
+    html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f0fafa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fafa;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #b2d8db;">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:#0D5C63;padding:28px 40px;">
+            <p style="margin:0;color:#ffffff;font-size:18px;font-weight:700;letter-spacing:-0.3px;">MJ Realty Coaching</p>
+            <p style="margin:4px 0 0;color:#a7d8dc;font-size:13px;">New Week Starts Today</p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:36px 40px;">
+            <p style="margin:0 0 16px;color:#1a1a1a;font-size:15px;">Hi {name},</p>
+            <p style="margin:0 0 16px;color:#374151;font-size:14px;line-height:1.6;">
+              A fresh week starts today. Your checklist has been reset and your coach has set your
+              targets for the week ahead.
+            </p>
+            <p style="margin:0 0 24px;color:#374151;font-size:14px;line-height:1.6;">
+              Log in this morning, review your goals, and hit the ground running.
+            </p>
+
+            <!-- CTA button -->
+            <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+              <tr>
+                <td style="background:#FF6B35;border-radius:8px;">
+                  <a href="{PLATFORM_URL}"
+                     style="display:inline-block;padding:12px 28px;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;">
+                    View My Week →
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Missed last week callout -->
+            <div style="margin-top:24px;padding:16px;background:#f9f9f9;border-radius:8px;border:1px solid #eee;">
+              <p style="font-size:13px;color:#888;margin:0;">
+                <strong style="color:#666;">Missed last week&apos;s data entry?</strong>
+                Log into your account and go to <strong>My Week &rarr; History</strong> to update your
+                previous week&apos;s activity before it&apos;s too late.
+              </p>
+            </div>
+
+            <p style="margin:32px 0 0;color:#374151;font-size:13px;line-height:1.6;">
+              <strong style="color:#0D5C63;">{coach_name}</strong>
+              <span style="color:#6b7280;"> &bull; MJ Realty Coaching</span>
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f0fafa;padding:20px 40px;border-top:1px solid #e5f0f1;">
+            <p style="margin:0;color:#9ca3af;font-size:11px;text-align:center;">
+              MJ Realty Coaching &bull; Monday new week notification.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+
+    _resend({
+        "from":    "MJ Realty Coaching <noreply@creativrealty.com>",
+        "to":      [email],
+        "subject": f"New week, new goals \u2014 let\u2019s go, {name}!",
+        "html":    html,
+    }, "monday-new-week")
+
+
 @router.post("")
 def submit_feedback(body: FeedbackBody):
     # Always store in Supabase first, then fire email in background

@@ -69,23 +69,41 @@ def create_realtor(
     email: str,
     coach_id: str | None = None,
     coaching_focus: str = "General coaching",
+    email_notifications: bool = True,
 ) -> dict:
     return supabase.table("realtors").insert({
-        "id":                realtor_id,
-        "name":              name,
-        "email":             email,
-        "coach_id":          coach_id,
-        "coaching_focus":    coaching_focus,
-        "yearly_goals":      {},
-        "tasks":             [],
-        "score_history":     [],
-        "experience_level":  None,
-        "roadmap_completed": [],
+        "id":                   realtor_id,
+        "name":                 name,
+        "email":                email,
+        "coach_id":             coach_id,
+        "coaching_focus":       coaching_focus,
+        "yearly_goals":         {},
+        "tasks":                [],
+        "score_history":        [],
+        "experience_level":     None,
+        "roadmap_completed":    [],
+        "email_notifications":  email_notifications,
     }).execute().data[0]
 
 
 def update_realtor(realtor_id: str, data: dict) -> dict:
     return supabase.table("realtors").update(data).eq("id", realtor_id).execute().data[0]
+
+
+def get_realtors_with_notifications() -> list[dict]:
+    """Return active realtors who have email_notifications enabled."""
+    return (
+        supabase.table("realtors")
+        .select("*")
+        .eq("active", True)
+        .eq("email_notifications", True)
+        .execute()
+        .data
+    )
+
+
+def update_realtor_notifications(realtor_id: str, enabled: bool) -> dict:
+    return supabase.table("realtors").update({"email_notifications": enabled}).eq("id", realtor_id).execute().data[0]
 
 
 def delete_realtor(realtor_id: str) -> None:

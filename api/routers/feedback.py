@@ -67,7 +67,7 @@ def send_email_background(name: str, page: str, message: str):
     }, "feedback")
 
 
-def send_welcome_email(name: str, email: str):
+def send_welcome_email(name: str, email: str, coach_name: str = "Your Coach"):
     html = f"""<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -132,7 +132,7 @@ def send_welcome_email(name: str, email: str):
 
             <p style="margin:0;color:#374151;font-size:13px;line-height:1.6;">
               Welcome to the team — let's build something great.<br><br>
-              <strong style="color:#0D5C63;">Martin Gallant</strong><br>
+              <strong style="color:#0D5C63;">{coach_name}</strong><br>
               <span style="color:#6b7280;">MJ Realty Coaching</span>
             </p>
           </td>

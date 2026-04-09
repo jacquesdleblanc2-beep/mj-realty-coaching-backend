@@ -106,10 +106,21 @@ def add_realtor(data: NewRealtor):
     default_tasks = init_realtor_tasks()
     result = crud.update_realtor(realtor_id, {"tasks": default_tasks})
 
+    # Resolve coach name for the welcome email
+    coach_name = "Your Coach"
+    try:
+        coach_id = (result or {}).get("coach_id")
+        if coach_id:
+            coach = crud.get_coach_by_id(coach_id)
+            if coach and coach.get("name"):
+                coach_name = coach["name"]
+    except Exception:
+        pass
+
     # Fire welcome email in background — non-blocking
     t = threading.Thread(
         target=send_welcome_email,
-        args=(data.name.strip(), data.email.strip().lower()),
+        args=(data.name.strip(), data.email.strip().lower(), coach_name),
         daemon=True,
     )
     t.start()

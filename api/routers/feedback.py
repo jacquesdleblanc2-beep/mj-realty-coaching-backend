@@ -117,6 +117,7 @@ def send_welcome_email(name: str, email: str):
               <li>Every Monday morning your weekly checklist resets — that's your weekly scorecard</li>
               <li>Check your <strong>Dashboard</strong> to track your progress, goals, and performance over time</li>
               <li>Head to <strong>My Roadmap</strong> to see your career milestones</li>
+              <li>Check the <strong>Notices</strong> tab in your sidebar for important updates and announcements from your coaching team</li>
             </ul>
 
             <p style="margin:0 0 10px;color:#0D5C63;font-size:13px;font-weight:600;">Your first week</p>

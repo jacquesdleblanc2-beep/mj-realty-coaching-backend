@@ -11,6 +11,7 @@ import os
 import sys
 import re
 import uuid
+import threading
 from typing import Optional
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
@@ -19,6 +20,7 @@ sys.path.insert(0, ROOT)
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from .. import crud
+from .feedback import send_welcome_email
 
 router = APIRouter()
 
@@ -102,7 +104,17 @@ def add_realtor(data: NewRealtor):
     )
     # Set default tasks via update (create_realtor sets empty list)
     default_tasks = init_realtor_tasks()
-    return crud.update_realtor(realtor_id, {"tasks": default_tasks})
+    result = crud.update_realtor(realtor_id, {"tasks": default_tasks})
+
+    # Fire welcome email in background — non-blocking
+    t = threading.Thread(
+        target=send_welcome_email,
+        args=(data.name.strip(), data.email.strip().lower()),
+        daemon=True,
+    )
+    t.start()
+
+    return result
 
 
 @router.put("/{realtor_id}")

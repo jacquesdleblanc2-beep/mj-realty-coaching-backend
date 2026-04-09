@@ -47,6 +47,7 @@ def send_email_background(name: str, page: str, message: str):
             headers={
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type":  "application/json",
+                "User-Agent":    "MJRealty-Platform/1.0",
             },
             method="POST",
         )

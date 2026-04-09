@@ -14,6 +14,7 @@ import os
 import sys
 import re
 import uuid
+import threading
 from typing import Optional
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
@@ -22,6 +23,7 @@ sys.path.insert(0, ROOT)
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from .. import crud
+from .feedback import send_coach_welcome_email
 
 router = APIRouter()
 
@@ -86,6 +88,14 @@ def create_coach(data: CoachCreate):
         raise HTTPException(status_code=409, detail="A coach with that email already exists.")
     coach_id = f"coach_{uuid.uuid4().hex[:8]}"
     coach    = crud.create_coach(coach_id, data.name.strip(), data.email.strip().lower())
+
+    t = threading.Thread(
+        target=send_coach_welcome_email,
+        args=(data.name.strip(), data.email.strip().lower()),
+        daemon=True,
+    )
+    t.start()
+
     return {**coach, "realtors": []}
 
 

@@ -161,6 +161,99 @@ def send_welcome_email(name: str, email: str):
     }, "welcome")
 
 
+def send_coach_welcome_email(name: str, email: str):
+    html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f0fafa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fafa;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #b2d8db;">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:#0D5C63;padding:28px 40px;">
+            <p style="margin:0;color:#ffffff;font-size:18px;font-weight:700;letter-spacing:-0.3px;">MJ Realty Coaching</p>
+            <p style="margin:4px 0 0;color:#a7d8dc;font-size:13px;">Welcome to MJ Realty Coaching</p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:36px 40px;">
+            <p style="margin:0 0 16px;color:#1a1a1a;font-size:15px;">Hi {name},</p>
+            <p style="margin:0 0 16px;color:#374151;font-size:14px;line-height:1.6;">
+              Your coach account on the MJ Realty Coaching Platform is set up and ready to go.
+            </p>
+
+            <!-- CTA button -->
+            <table cellpadding="0" cellspacing="0" style="margin:24px 0;">
+              <tr>
+                <td style="background:#FF6B35;border-radius:8px;">
+                  <a href="{PLATFORM_URL}"
+                     style="display:inline-block;padding:12px 28px;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;">
+                    Log In to Your Dashboard →
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Divider -->
+            <hr style="border:none;border-top:1px solid #e5f0f1;margin:28px 0;">
+
+            <p style="margin:0 0 10px;color:#0D5C63;font-size:13px;font-weight:600;">As a coach, here's what you can do</p>
+            <ul style="margin:0 0 20px;padding-left:20px;color:#374151;font-size:13px;line-height:1.8;">
+              <li>View your full team overview and each realtor's weekly score</li>
+              <li>Set weekly goals and tasks for each of your realtors</li>
+              <li>Preview any realtor's dashboard exactly as they see it</li>
+              <li>Send notices and important updates to your team</li>
+              <li>Track performance trends over time</li>
+            </ul>
+
+            <p style="margin:0 0 10px;color:#0D5C63;font-size:13px;font-weight:600;">Getting started</p>
+            <ul style="margin:0 0 28px;padding-left:20px;color:#374151;font-size:13px;line-height:1.8;">
+              <li>Head to <strong>My Realtors</strong> to see your assigned team</li>
+              <li>Click on any realtor to set their weekly strategy</li>
+              <li>Use <strong>Notices</strong> to send your first team announcement</li>
+            </ul>
+
+            <p style="margin:0 0 8px;color:#374151;font-size:13px;line-height:1.6;">
+              If you have any questions reach out to Jacques directly.
+            </p>
+            <p style="margin:0 0 28px;color:#374151;font-size:13px;line-height:1.6;">
+              Welcome aboard — let's build a great team.
+            </p>
+
+            <p style="margin:0;color:#374151;font-size:13px;line-height:1.6;">
+              <strong style="color:#0D5C63;">Jacques LeBlanc</strong><br>
+              <span style="color:#6b7280;">MJ Realty Coaching</span>
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f0fafa;padding:20px 40px;border-top:1px solid #e5f0f1;">
+            <p style="margin:0;color:#9ca3af;font-size:11px;text-align:center;">
+              MJ Realty Coaching &bull; You received this because a coach account was created for your email address.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+
+    _resend({
+        "from":    "MJ Realty Coaching <noreply@creativrealty.com>",
+        "to":      [email],
+        "subject": f"Welcome to MJ Realty Coaching \u2014 Your Coach Account is Ready, {name}!",
+        "html":    html,
+    }, "coach-welcome")
+
+
 @router.post("")
 def submit_feedback(body: FeedbackBody):
     # Always store in Supabase first, then fire email in background

@@ -419,6 +419,42 @@ def submit_feedback(body: FeedbackBody):
     return {"status": "ok"}
 
 
+@router.get("/test/sunday")
+def test_sunday():
+    try:
+        send_sunday_reminder_email("Jacques", RECIPIENT, "Martin Gallant")
+        return {"status": "ok"}
+    except Exception as exc:
+        return {"status": "error", "detail": str(exc)}
+
+
+@router.get("/test/monday")
+def test_monday():
+    try:
+        send_monday_new_week_email("Jacques", RECIPIENT, "Martin Gallant")
+        return {"status": "ok"}
+    except Exception as exc:
+        return {"status": "error", "detail": str(exc)}
+
+
+@router.get("/test/welcome-realtor")
+def test_welcome_realtor():
+    try:
+        send_welcome_email("Jacques", RECIPIENT, "Martin Gallant")
+        return {"status": "ok"}
+    except Exception as exc:
+        return {"status": "error", "detail": str(exc)}
+
+
+@router.get("/test/welcome-coach")
+def test_welcome_coach():
+    try:
+        send_coach_welcome_email("Jacques", RECIPIENT)
+        return {"status": "ok"}
+    except Exception as exc:
+        return {"status": "error", "detail": str(exc)}
+
+
 @router.get("")
 def list_feedback():
     return crud.get_all_feedback()
